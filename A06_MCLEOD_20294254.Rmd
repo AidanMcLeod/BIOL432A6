@@ -1,0 +1,98 @@
+---
+title: "A06_MCLEOD_20294254"
+author: "AHM"
+date: "2025-02-11"
+output: html_document
+---
+
+Aidan McLeod, 20294254
+
+3
+```{r}
+library(parallel)
+library(foreach)
+library(doParallel)
+```
+
+4.
+```{r}
+num_cores <- detectCores()
+num_cores
+```
+This computer has 8 cores
+
+5. - 6.
+```{r}
+# Initialize a vector to store the means (optional for tracking purposes)
+means <- numeric(4000)
+
+# Run the for-loop 4,000 times
+system.time({
+  for(i in 1:4000) {
+    # Generate 100,000 random numbers from a normal distribution
+    random_numbers <- rnorm(100000, mean = 10, sd = 3)
+    
+    # Calculate the mean of the random numbers
+    means[i] <- mean(random_numbers)
+  }
+})
+```
+It took the system 11.86 seconds to run the loop.
+
+```{r}
+time_taken_s <- 11.860
+```
+
+7.
+```{r}
+predicted_parallel_time <- time_taken_s / num_cores
+predicted_parallel_time
+```
+Given that there are 8 cores, the parallel loop should take approx. 1.48 seconds.
+
+8.
+Detect available cores
+```{r}
+Cores <- parallel::makeCluster(detectCores())
+```
+Assign cores / activate multi-threading
+```{r}
+doParallel::registerDoParallel(Cores) 
+```
+
+Construct the parallel loop
+```{r}
+# Record start time for parallel loop
+start_parallel_time <- Sys.time()
+
+# Run the parallelized loop
+means_parallel <- foreach(i = 1:4000, .combine = rbind) %dopar% {
+  # Generate 100,000 random numbers from a normal distribution
+  random_numbers <- rnorm(100000, mean = 10, sd = 3)
+  
+}
+
+# Record end time for parallel loop
+end_parallel_time <- Sys.time()
+
+print(i)
+```
+
+Now deactivate multi-threading
+```{r}
+parallel::stopCluster(Cores)
+```
+
+9
+Calculate the time to run the loop
+```{r}
+parallel_time_taken <- end_parallel_time - start_parallel_time
+parallel_time_taken  
+```
+Therefore it took 3.24 seconds to run the parallel loop.
+
+10
+The run time for the parallel loop is much shorter than the serial loop because the task is divided amongst the cluster of cores reassigned to R. However, the parallel loop time (3.24 secs) took longer by approx double the predicted time (1.48 secs). This suggests that there are actually 4 cores being used for the task rather than 8 cores.
+
+After checking in the settings of my computer, it appears that there are indeed 8 cores, with 4 for perfomance and 4 for efficiency. 
+"Chip:	Apple M1, Total Number of Cores:	8 (4 performance and 4 efficiency)". This makes sense in terms of timing as the computer likely used 4 cores (either 4 efficiency or a combination) to optimize the run time of the parallel loop.
